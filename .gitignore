@@ -1,4 +1,3 @@
 *~
 /*.txt
-/img/*.jpg
-/img/*.pgm
+*.jpg
