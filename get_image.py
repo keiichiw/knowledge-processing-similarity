@@ -1,18 +1,19 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import urllib2
+import os.path
+import sys
 import wget
 from bs4 import BeautifulSoup
 import cv2
 
 def get_name(tag):
-    divs = tag.find_all("div")
-    for dv in divs:
-        if "class" in dv.attrs and "Name" in dv["class"]:
-            return dv.strings.next().encode('utf-8')
+    li = tag.find_all("li")
+    for l in li:
+        if "class" in l.attrs and "Name" in l["class"]:
+            return l.div.strings.next().encode('utf-8')
 
     print >> sys.stderr,"Name Not Found:", tag
-    exit(1)
 
 def get_image_url(tag):
     imgs = tag.find_all("img")
@@ -21,9 +22,9 @@ def get_image_url(tag):
             return img["src"]
 
     print >> sys.stderr, "Image Not Found:", tag
-    exit(1)
 
-URL="http://sp.senkyo.mainichi.jp/giin/list.html?p="
+HOME_URL = "http://senkyo.mainichi.jp"
+URL      = HOME_URL+"/giin/list.html?p="
 memnum = 0
 
 def get_image_from_page(page, f):
@@ -40,12 +41,13 @@ def get_image_from_page(page, f):
             memnum += 1
             m_id = str(memnum).zfill(3)
             name    = get_name(tag)
-            img_url = get_image_url(tag)
+            img_url = HOME_URL + get_image_url(tag)
             img_path="./img/"+m_id+".jpg"
-            wget.download(img_url, out=img_path)
+            if not os.path.exists(img_path):
+                wget.download(img_url, out=img_path)
             get_face(m_id)
-            print m_id,": ",name
-            print >>f, m_id,": ",name
+            print "%s %s" % (m_id, name)
+            print >>f, "%s %s" % (m_id, name)
 
 
 def get_face(m_id):
@@ -72,8 +74,7 @@ def get_face(m_id):
         cv2.imwrite(face_path, face)
         return True
     else:
-        print "fail!!"
-        return False
+        print "fail to detect the face"
 
 
 def main():

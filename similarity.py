@@ -12,7 +12,7 @@ def load_img(img_id):
     img_path = "./img/"+str(img_id).zfill(3)+"_face.jpg"
     try:
         image = cv2.imread(img_path, 0).flatten()
-        n_image = image / numpy.linalg.norm(image)
+        n_image = image / numpy.linalg.norm(image) # 正規化
         img_vecs[img_id] = n_image
     except:
         # 顔が認識されなかった
@@ -29,24 +29,27 @@ def main():
     for i in range(MEMBER_NUM):
         load_img(i+1)
 
-    mx_v = 0
-    mx_pair = (-1, -1)
-    print " id| nearest| similarity"
+    print "calculation.."
+    lst = []
     for k1, v1 in img_vecs.items():
-        c_max = 0
-        p = 0
         for k2, v2 in img_vecs.items():
-            if k1 == k2:
+            if k1 >= k2:
                 continue
             c = calc_sim(v1, v2)
-            if c > c_max:
-                c_max = c
-                p = k2
-        print str(k1).zfill(3), str(p).zfill(3), c_max
-        if c_max > mx_v:
-            mx_v = c_max
-            mx_pair = (k1, p)
-    print mx_v, mx_pair
+            lst.append((c, (k1, k2)))
+
+    lst.sort()
+    lst.reverse()
+
+    f = open('list.txt')
+    names = f.readlines()
+    f.close()
+
+    for i in range(3):
+        p, (id1, id2) = lst[i]
+        name1 = names[id1-1].split()[1]
+        name2 = names[id2-1].split()[1]
+        print "%03d%s, %03d%s : %f" % (id1, name1, id2, name2, p)
 
 if __name__ == '__main__':
     main()
